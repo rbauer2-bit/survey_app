@@ -8,6 +8,52 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
+// Get public assessment via custom domain (no auth required)
+router.get(
+  '/public/custom-domain/:assessmentId',
+  validate([param('assessmentId').isUUID()]),
+  async (req: Request, res: Response, next) => {
+    try {
+      const assessment = await AssessmentModel.findById(req.params.assessmentId);
+
+      if (!assessment) {
+        throw new APIError('Assessment not found', 404);
+      }
+
+      if (assessment.status !== 'published') {
+        throw new APIError('Assessment is not available', 403);
+      }
+
+      const fullAssessment = await AssessmentModel.findWithDetails(assessment.id);
+
+      // Remove score ranges from public view
+      const publicAssessment = {
+        id: fullAssessment!.id,
+        title: fullAssessment!.title,
+        description: fullAssessment!.description,
+        industry: fullAssessment!.industry,
+        branding_config: fullAssessment!.branding_config,
+        questions: fullAssessment!.questions.map(q => ({
+          id: q.id,
+          question_text: q.question_text,
+          question_type: q.question_type,
+          order_index: q.order_index,
+          required: q.required,
+          answer_options: q.answer_options.map(a => ({
+            id: a.id,
+            option_text: a.option_text,
+            order_index: a.order_index
+          }))
+        }))
+      };
+
+      res.json({ assessment: publicAssessment, isCustomDomain: true });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // Get public assessment by slug (no auth required)
 router.get(
   '/public/:slug',

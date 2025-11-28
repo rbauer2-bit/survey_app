@@ -10,12 +10,15 @@ import authRoutes from './routes/auth';
 import assessmentRoutes from './routes/assessments';
 import responseRoutes from './routes/responses';
 import emailSequenceRoutes from './routes/emailSequences';
+import customDomainRoutes from './routes/customDomains';
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { customDomainRouter } from './middleware/customDomainRouter';
 
 // Import workers
 import { emailWorker } from './workers/emailWorker';
+import { domainVerificationWorker } from './workers/domainVerificationWorker';
 
 // Load environment variables
 dotenv.config();
@@ -41,6 +44,9 @@ app.use('/api/', limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Custom domain routing middleware (must be before routes)
+app.use(customDomainRouter);
+
 // Serve static PDF files
 app.use('/pdfs', express.static(path.join(__dirname, '../pdfs')));
 
@@ -58,6 +64,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/responses', responseRoutes);
 app.use('/api/email-sequences', emailSequenceRoutes);
+app.use('/api/custom-domains', customDomainRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
@@ -81,6 +88,10 @@ const startServer = async () => {
     // Start email worker
     emailWorker.start();
     console.log('✅ Email worker started');
+
+    // Start domain verification worker
+    domainVerificationWorker.start();
+    console.log('✅ Domain verification worker started');
 
     // Start Express server
     app.listen(PORT, () => {

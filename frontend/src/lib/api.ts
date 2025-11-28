@@ -152,6 +152,49 @@ class APIClient {
   async deleteEmailTemplate(id: string) {
     return this.client.delete(`/email-sequences/templates/${id}`);
   }
+
+  // Custom domain endpoints
+  async getCustomDomains() {
+    return this.client.get('/custom-domains');
+  }
+
+  async getCustomDomain(id: string) {
+    return this.client.get(`/custom-domains/${id}`);
+  }
+
+  async createCustomDomain(data: {
+    domain: string;
+    subdomain?: string;
+    assessment_id?: string;
+  }) {
+    return this.client.post('/custom-domains', data);
+  }
+
+  async updateCustomDomain(id: string, data: { assessment_id?: string }) {
+    return this.client.patch(`/custom-domains/${id}`, data);
+  }
+
+  async deleteCustomDomain(id: string) {
+    return this.client.delete(`/custom-domains/${id}`);
+  }
+
+  async verifyCustomDomain(id: string) {
+    return this.client.post(`/custom-domains/${id}/verify`);
+  }
+
+  async activateCustomDomain(id: string) {
+    return this.client.post(`/custom-domains/${id}/activate`);
+  }
+
+  async deactivateCustomDomain(id: string) {
+    return this.client.post(`/custom-domains/${id}/deactivate`);
+  }
+
+  async getCustomDomainAnalytics(id: string, days = 30) {
+    return this.client.get(`/custom-domains/${id}/analytics`, {
+      params: { days },
+    });
+  }
 }
 
 export const api = new APIClient();

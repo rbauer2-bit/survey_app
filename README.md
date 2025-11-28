@@ -11,6 +11,7 @@ A full-stack SaaS application for creating scoreable assessments/surveys with PD
 - **PDF Reports**: Automatically generate customized PDF reports based on scores
 - **Email Automation**: Send reports and trigger nurturing email sequences
 - **Public Survey Pages**: Shareable links for respondents to take assessments
+- **Custom Domains**: Host assessments on your own branded domains
 - **Analytics Dashboard**: Track responses, scores, and distributions
 - **Industry Adaptable**: Customize assessments for different industries and target avatars
 
@@ -21,6 +22,7 @@ A full-stack SaaS application for creating scoreable assessments/surveys with PD
 - **Authentication**: JWT-based auth with bcrypt password hashing
 - **PDF Generation**: PDFKit for custom report generation
 - **Email Service**: SendGrid/Mailgun integration
+- **Domain Management**: DNS verification and custom domain routing
 - **API**: RESTful API with validation and error handling
 
 ## Project Structure

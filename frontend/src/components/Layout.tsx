@@ -5,7 +5,8 @@ import {
   FileText,
   LogOut,
   User,
-  Plus
+  Plus,
+  Globe
 } from 'lucide-react';
 
 export default function Layout() {
@@ -65,6 +66,18 @@ export default function Layout() {
             >
               <Plus size={20} />
               <span>New Assessment</span>
+            </Link>
+
+            <Link
+              to="/custom-domains"
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+                isActive('/custom-domains')
+                  ? 'bg-primary-50 text-primary-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <Globe size={20} />
+              <span>Custom Domains</span>
             </Link>
           </nav>
 
