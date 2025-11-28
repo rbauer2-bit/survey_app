@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { body, param, query } from 'express-validator';
 import { AssessmentModel } from '../models/Assessment';
 import { ResponseModel } from '../models/Response';
+import { GHLIntegrationModel } from '../models/GHLIntegration';
+import { createGHLServiceFromUser } from '../services/ghlService';
 import { validate } from '../middleware/validation';
 import { APIError } from '../middleware/errorHandler';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
@@ -139,6 +141,11 @@ router.post(
       // Fetch complete response details
       const fullResponse = await ResponseModel.findWithDetails(response.id);
 
+      // Trigger GHL sync asynchronously (don't wait for it)
+      syncToGHL(assessment, fullResponse!).catch(err => {
+        console.error('GHL sync error:', err);
+      });
+
       res.status(201).json({
         message: 'Assessment submitted successfully',
         response: {
@@ -236,5 +243,113 @@ router.get(
     }
   }
 );
+
+// Helper function to sync response to GHL
+async function syncToGHL(assessment: any, response: any): Promise<void> {
+  try {
+    // Get GHL integration for assessment owner
+    const integration = await GHLIntegrationModel.findActiveByUserId(assessment.user_id);
+
+    if (!integration || !integration.sync_enabled) {
+      return; // No active integration, skip sync
+    }
+
+    // Create sync log entry
+    const syncLog = await GHLIntegrationModel.createSyncLog({
+      integration_id: integration.id,
+      response_id: response.id,
+      sync_type: 'create',
+    });
+
+    try {
+      // Get field mappings for this assessment
+      const fieldMappings = await GHLIntegrationModel.getFieldMappings(
+        integration.id,
+        assessment.id
+      );
+
+      // Get tags to apply
+      const tagRules = await GHLIntegrationModel.getTagRules(integration.id, assessment.id);
+      const tags: string[] = [];
+
+      for (const rule of tagRules) {
+        if (rule.apply_on === 'completion') {
+          tags.push(rule.tag_name);
+        } else if (
+          rule.apply_on === 'score_range' &&
+          rule.score_range_id === response.score_range_id
+        ) {
+          tags.push(rule.tag_name);
+        }
+      }
+
+      // Get workflows to trigger
+      const workflowTriggers = await GHLIntegrationModel.getWorkflowTriggers(
+        integration.id,
+        assessment.id
+      );
+      const workflowIds: string[] = [];
+
+      for (const trigger of workflowTriggers) {
+        if (trigger.trigger_type === 'all_completions') {
+          workflowIds.push(trigger.ghl_workflow_id);
+        } else if (
+          trigger.trigger_type === 'score_range' &&
+          trigger.score_range_id === response.score_range_id
+        ) {
+          workflowIds.push(trigger.ghl_workflow_id);
+        }
+      }
+
+      // Create GHL service
+      const ghlService = await createGHLServiceFromUser(assessment.user_id);
+
+      if (!ghlService) {
+        throw new Error('Failed to create GHL service');
+      }
+
+      // Sync to GHL
+      const result = await ghlService.syncAssessmentResults({
+        respondent: response.respondent,
+        response,
+        assessment,
+        answers: response.answers,
+        scoreRange: response.score_range,
+        fieldMappings,
+        tags,
+        workflowIds,
+      });
+
+      // Update sync log
+      if (result.success) {
+        await GHLIntegrationModel.updateSyncLog(syncLog.id, {
+          sync_status: 'success',
+          ghl_contact_id: result.contactId,
+          synced_at: new Date(),
+        });
+
+        // Update integration last sync time
+        await GHLIntegrationModel.update(integration.id, {
+          last_sync_at: new Date(),
+        });
+      } else {
+        await GHLIntegrationModel.updateSyncLog(syncLog.id, {
+          sync_status: 'failed',
+          error_message: result.error,
+        });
+      }
+    } catch (error: any) {
+      // Update sync log with error
+      await GHLIntegrationModel.updateSyncLog(syncLog.id, {
+        sync_status: 'failed',
+        error_message: error.message,
+      });
+
+      console.error('GHL sync failed:', error);
+    }
+  } catch (error) {
+    console.error('GHL sync setup failed:', error);
+  }
+}
 
 export default router;
