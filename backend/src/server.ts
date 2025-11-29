@@ -14,6 +14,7 @@ import customDomainRoutes from './routes/customDomains';
 import ghlIntegrationRoutes from './routes/ghlIntegrations';
 import analyticsRoutes from './routes/analytics';
 import adminUserRoutes from './routes/admin/users';
+import smtpSettingsRoutes from './routes/smtpSettings';
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
@@ -71,6 +72,7 @@ app.use('/api/custom-domains', customDomainRoutes);
 app.use('/api/ghl-integrations', ghlIntegrationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin/users', adminUserRoutes);
+app.use('/api/smtp-settings', smtpSettingsRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

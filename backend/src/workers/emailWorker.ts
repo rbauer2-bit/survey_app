@@ -1,6 +1,8 @@
 import cron from 'node-cron';
 import { EmailModel } from '../models/Email';
 import { ResponseModel } from '../models/Response';
+import { UserModel } from '../models/User';
+import { AssessmentModel } from '../models/Assessment';
 import { emailService } from '../services/emailService';
 import { PDFService } from '../services/pdfService';
 import pool from '../config/database';
@@ -36,10 +38,23 @@ export class EmailWorker {
 
     for (const delivery of pendingEmails) {
       try {
+        // Get response and assessment to get user_id
+        const response = await ResponseModel.findById(delivery.response_id);
+        if (!response) {
+          console.error(`Response not found for delivery ${delivery.id}`);
+          continue;
+        }
+
+        const assessment = await AssessmentModel.findById(response.assessment_id);
+        if (!assessment) {
+          console.error(`Assessment not found for delivery ${delivery.id}`);
+          continue;
+        }
+
         // Get respondent details
         const respondentQuery = await pool.query(
           'SELECT * FROM respondents WHERE id = $1',
-          [delivery.response_id]
+          [response.respondent_id]
         );
         const respondent = respondentQuery.rows[0];
 
@@ -48,6 +63,9 @@ export class EmailWorker {
           continue;
         }
 
+        // Get user's SMTP config (assessment override or user default)
+        const smtpConfig = assessment.smtp_config || await UserModel.getSMTPConfig(assessment.user_id);
+
         // Prepare template variables
         const variables = {
           name: respondent.name || 'there',
@@ -55,17 +73,18 @@ export class EmailWorker {
           company: respondent.company || ''
         };
 
-        // Send email
+        // Send email with custom SMTP config
         await emailService.sendNurturingEmail(
           respondent,
           delivery as any, // Contains template fields
-          variables
+          variables,
+          smtpConfig
         );
 
         // Update delivery status
         await EmailModel.updateDeliveryStatus(delivery.id, 'sent');
 
-        console.log(`Email sent to ${respondent.email}`);
+        console.log(`Email sent to ${respondent.email} using ${smtpConfig ? 'custom' : 'default'} SMTP`);
       } catch (error) {
         console.error(`Failed to send email ${delivery.id}:`, error);
         await EmailModel.updateDeliveryStatus(
@@ -120,6 +139,12 @@ export class EmailWorker {
         throw new Error('Response not found');
       }
 
+      // Get assessment with branding
+      const assessment = await AssessmentModel.findById(response.assessment_id);
+      if (!assessment) {
+        throw new Error('Assessment not found');
+      }
+
       // Generate PDF
       const pdfPath = await PDFService.generateReport(response);
       const pdfUrl = PDFService.getPublicURL(pdfPath);
@@ -127,25 +152,26 @@ export class EmailWorker {
       // Update response with PDF info
       await ResponseModel.updatePdfInfo(responseId, pdfUrl);
 
-      // Get assessment title
-      const assessmentQuery = await pool.query(
-        'SELECT title FROM assessments WHERE id = $1',
-        [response.assessment_id]
-      );
-      const assessmentTitle = assessmentQuery.rows[0]?.title || 'Assessment';
+      // Get user's SMTP config (assessment override or user default)
+      const smtpConfig = assessment.smtp_config || await UserModel.getSMTPConfig(assessment.user_id);
 
-      // Send email with report
+      // Get branding config from assessment
+      const brandingConfig = assessment.branding_config || {};
+
+      // Send email with report, SMTP config, and branding
       await emailService.sendAssessmentReport(
         response.respondent,
         response,
         pdfUrl,
-        assessmentTitle
+        assessment.title,
+        smtpConfig,
+        brandingConfig
       );
 
       // Mark email as sent
       await ResponseModel.markEmailSent(responseId);
 
-      console.log(`Report email sent for response ${responseId}`);
+      console.log(`Report email sent for response ${responseId} using ${smtpConfig ? 'custom' : 'default'} SMTP`);
 
       // Schedule nurturing emails
       await this.scheduleEmailsForResponse(responseId);

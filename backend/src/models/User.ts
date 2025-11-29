@@ -126,4 +126,20 @@ export class UserModel {
     const user = await this.findById(userId);
     return user?.role === 'super_admin' || user?.role === 'assistant_admin';
   }
+
+  static async getSMTPConfig(userId: string): Promise<any | null> {
+    const user = await this.findById(userId);
+    return user?.smtp_config || null;
+  }
+
+  static async updateSMTPConfig(userId: string, smtpConfig: any): Promise<User | null> {
+    const query = `
+      UPDATE users
+      SET smtp_config = $2
+      WHERE id = $1
+      RETURNING *
+    `;
+    const result = await pool.query(query, [userId, JSON.stringify(smtpConfig)]);
+    return result.rows[0] || null;
+  }
 }
