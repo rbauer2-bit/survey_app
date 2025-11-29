@@ -283,6 +283,44 @@ class APIClient {
       params: { limit },
     });
   }
+
+  // SMTP Settings endpoints
+  async getSMTPSettings() {
+    return this.client.get('/smtp-settings');
+  }
+
+  async updateSMTPSettings(data: {
+    host: string;
+    port: number;
+    secure: boolean;
+    auth: {
+      user: string;
+      pass: string;
+    };
+    from_email: string;
+    from_name: string;
+  }) {
+    return this.client.post('/smtp-settings', data);
+  }
+
+  async testSMTPSettings(data: {
+    host: string;
+    port: number;
+    secure: boolean;
+    auth: {
+      user: string;
+      pass: string;
+    };
+    from_email: string;
+    from_name: string;
+    test_email: string;
+  }) {
+    return this.client.post('/smtp-settings/test', data);
+  }
+
+  async deleteSMTPSettings() {
+    return this.client.delete('/smtp-settings');
+  }
 }
 
 export const api = new APIClient();

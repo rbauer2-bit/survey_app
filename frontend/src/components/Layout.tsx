@@ -8,7 +8,8 @@ import {
   Plus,
   Globe,
   Users,
-  Shield
+  Shield,
+  Settings
 } from 'lucide-react';
 
 export default function Layout() {
@@ -80,6 +81,18 @@ export default function Layout() {
             >
               <Globe size={20} />
               <span>Custom Domains</span>
+            </Link>
+
+            <Link
+              to="/settings/smtp"
+              className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
+                isActive('/settings/smtp')
+                  ? 'bg-primary-50 text-primary-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <Settings size={20} />
+              <span>Email Settings</span>
             </Link>
 
             {/* Admin Only - User Management */}

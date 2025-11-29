@@ -14,6 +14,7 @@ import EmailSequences from './pages/EmailSequences';
 import CustomDomains from './pages/CustomDomains';
 import Analytics from './pages/Analytics';
 import UserManagement from './pages/UserManagement';
+import SMTPSettings from './pages/SMTPSettings';
 
 // Components
 import PrivateRoute from './components/PrivateRoute';
@@ -42,6 +43,7 @@ function App() {
             <Route path="/assessments/:id/emails" element={<EmailSequences />} />
             <Route path="/custom-domains" element={<CustomDomains />} />
             <Route path="/users" element={<UserManagement />} />
+            <Route path="/settings/smtp" element={<SMTPSettings />} />
           </Route>
         </Route>
 
