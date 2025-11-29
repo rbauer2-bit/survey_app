@@ -12,6 +12,8 @@ import responseRoutes from './routes/responses';
 import emailSequenceRoutes from './routes/emailSequences';
 import customDomainRoutes from './routes/customDomains';
 import ghlIntegrationRoutes from './routes/ghlIntegrations';
+import analyticsRoutes from './routes/analytics';
+import adminUserRoutes from './routes/admin/users';
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
@@ -67,6 +69,8 @@ app.use('/api/responses', responseRoutes);
 app.use('/api/email-sequences', emailSequenceRoutes);
 app.use('/api/custom-domains', customDomainRoutes);
 app.use('/api/ghl-integrations', ghlIntegrationRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/admin/users', adminUserRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

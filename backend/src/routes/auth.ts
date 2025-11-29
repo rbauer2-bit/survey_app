@@ -44,7 +44,8 @@ router.post(
       // Generate JWT token
       const token = generateToken({
         userId: user.id,
-        email: user.email
+        email: user.email,
+        role: user.role
       });
 
       res.status(201).json({
@@ -54,6 +55,7 @@ router.post(
           email: user.email,
           name: user.name,
           company_name: user.company_name,
+          role: user.role,
           subscription_tier: user.subscription_tier,
           subscription_status: user.subscription_status
         },
@@ -96,7 +98,8 @@ router.post(
       // Generate JWT token
       const token = generateToken({
         userId: user.id,
-        email: user.email
+        email: user.email,
+        role: user.role
       });
 
       res.json({
@@ -106,6 +109,7 @@ router.post(
           email: user.email,
           name: user.name,
           company_name: user.company_name,
+          role: user.role,
           subscription_tier: user.subscription_tier,
           subscription_status: user.subscription_status
         },
@@ -135,6 +139,7 @@ router.get('/me', authenticateToken, async (req: AuthRequest, res: Response, nex
         email: user.email,
         name: user.name,
         company_name: user.company_name,
+        role: user.role,
         subscription_tier: user.subscription_tier,
         subscription_status: user.subscription_status,
         created_at: user.created_at

@@ -46,6 +46,12 @@ export class AssessmentModel {
     return result.rows;
   }
 
+  static async findAll(limit: number = 100, offset: number = 0): Promise<Assessment[]> {
+    const query = 'SELECT * FROM assessments ORDER BY created_at DESC LIMIT $1 OFFSET $2';
+    const result = await pool.query(query, [limit, offset]);
+    return result.rows;
+  }
+
   static async findWithDetails(id: string): Promise<AssessmentWithDetails | null> {
     const assessment = await this.findById(id);
     if (!assessment) return null;

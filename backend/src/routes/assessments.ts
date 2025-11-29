@@ -58,7 +58,14 @@ router.get('/', authenticateToken, async (req: AuthRequest, res: Response, next)
   try {
     if (!req.user) throw new APIError('Unauthorized', 401);
 
-    const assessments = await AssessmentModel.findByUserId(req.user.userId);
+    // Admins can see all assessments, clients see only their own
+    let assessments;
+    if (req.user.role === 'super_admin' || req.user.role === 'assistant_admin') {
+      // For admins, get all assessments (could be paginated in future)
+      assessments = await AssessmentModel.findAll();
+    } else {
+      assessments = await AssessmentModel.findByUserId(req.user.userId);
+    }
 
     res.json({ assessments });
   } catch (error) {
@@ -81,7 +88,12 @@ router.get(
         throw new APIError('Assessment not found', 404);
       }
 
-      if (assessment.user_id !== req.user.userId) {
+      // Allow access if owner or admin
+      if (
+        assessment.user_id !== req.user.userId &&
+        req.user.role !== 'super_admin' &&
+        req.user.role !== 'assistant_admin'
+      ) {
         throw new APIError('Access denied', 403);
       }
 
@@ -110,7 +122,15 @@ router.patch(
 
       const existing = await AssessmentModel.findById(req.params.id);
       if (!existing) throw new APIError('Assessment not found', 404);
-      if (existing.user_id !== req.user.userId) throw new APIError('Access denied', 403);
+
+      // Allow if owner or admin
+      if (
+        existing.user_id !== req.user.userId &&
+        req.user.role !== 'super_admin' &&
+        req.user.role !== 'assistant_admin'
+      ) {
+        throw new APIError('Access denied', 403);
+      }
 
       const assessment = await AssessmentModel.update(req.params.id, req.body);
 
@@ -135,7 +155,15 @@ router.delete(
 
       const existing = await AssessmentModel.findById(req.params.id);
       if (!existing) throw new APIError('Assessment not found', 404);
-      if (existing.user_id !== req.user.userId) throw new APIError('Access denied', 403);
+
+      // Allow if owner or admin
+      if (
+        existing.user_id !== req.user.userId &&
+        req.user.role !== 'super_admin' &&
+        req.user.role !== 'assistant_admin'
+      ) {
+        throw new APIError('Access denied', 403);
+      }
 
       await AssessmentModel.delete(req.params.id);
 

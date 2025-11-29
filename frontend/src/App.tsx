@@ -12,6 +12,8 @@ import AssessmentAnalytics from './pages/AssessmentAnalytics';
 import PublicSurvey from './pages/PublicSurvey';
 import EmailSequences from './pages/EmailSequences';
 import CustomDomains from './pages/CustomDomains';
+import Analytics from './pages/Analytics';
+import UserManagement from './pages/UserManagement';
 
 // Components
 import PrivateRoute from './components/PrivateRoute';
@@ -36,8 +38,10 @@ function App() {
             <Route path="/assessments/new" element={<AssessmentBuilder />} />
             <Route path="/assessments/:id/edit" element={<AssessmentBuilder />} />
             <Route path="/assessments/:id/analytics" element={<AssessmentAnalytics />} />
+            <Route path="/assessments/:id/insights" element={<Analytics />} />
             <Route path="/assessments/:id/emails" element={<EmailSequences />} />
             <Route path="/custom-domains" element={<CustomDomains />} />
+            <Route path="/users" element={<UserManagement />} />
           </Route>
         </Route>
 

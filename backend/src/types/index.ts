@@ -4,6 +4,8 @@ export interface User {
   password_hash: string;
   name: string;
   company_name?: string;
+  role: 'super_admin' | 'assistant_admin' | 'client' | 'respondent';
+  created_by?: string;
   subscription_tier: 'free' | 'basic' | 'pro' | 'enterprise';
   subscription_status: 'active' | 'inactive' | 'trial' | 'cancelled';
   created_at: Date;
@@ -145,6 +147,7 @@ export interface EmailDelivery {
 export interface JWTPayload {
   userId: string;
   email: string;
+  role: 'super_admin' | 'assistant_admin' | 'client' | 'respondent';
 }
 
 export interface AssessmentWithDetails extends Assessment {

@@ -195,6 +195,94 @@ class APIClient {
       params: { days },
     });
   }
+
+  // Analytics endpoints
+  async getAnalyticsOverview(assessmentId: string) {
+    return this.client.get(`/analytics/assessments/${assessmentId}/overview`);
+  }
+
+  async getQuestionAnalytics(assessmentId: string) {
+    return this.client.get(`/analytics/assessments/${assessmentId}/questions`);
+  }
+
+  async getScoreDistributionAnalytics(assessmentId: string) {
+    return this.client.get(`/analytics/assessments/${assessmentId}/score-distribution`);
+  }
+
+  async getResponseTrends(assessmentId: string, interval: 'day' | 'week' | 'month' = 'day', limit = 30) {
+    return this.client.get(`/analytics/assessments/${assessmentId}/trends`, {
+      params: { interval, limit },
+    });
+  }
+
+  async generateInsights(assessmentId: string) {
+    return this.client.post(`/analytics/assessments/${assessmentId}/generate-insights`);
+  }
+
+  async getInsights(assessmentId: string) {
+    return this.client.get(`/analytics/assessments/${assessmentId}/insights`);
+  }
+
+  async generateContentSuggestions(assessmentId: string) {
+    return this.client.post(`/analytics/assessments/${assessmentId}/content-suggestions`);
+  }
+
+  async generateTrendAnalysis(assessmentId: string) {
+    return this.client.post(`/analytics/assessments/${assessmentId}/trend-analysis`);
+  }
+
+  async getAnalyticsDashboard() {
+    return this.client.get('/analytics/dashboard');
+  }
+
+  // Admin user management endpoints
+  async getAllUsers(page = 1, limit = 50) {
+    return this.client.get('/admin/users', {
+      params: { page, limit },
+    });
+  }
+
+  async getUserStats() {
+    return this.client.get('/admin/users/stats');
+  }
+
+  async getUser(id: string) {
+    return this.client.get(`/admin/users/${id}`);
+  }
+
+  async createUser(data: {
+    email: string;
+    password: string;
+    name: string;
+    company_name?: string;
+    role: 'super_admin' | 'assistant_admin' | 'client' | 'respondent';
+  }) {
+    return this.client.post('/admin/users', data);
+  }
+
+  async updateUserRole(id: string, role: string) {
+    return this.client.patch(`/admin/users/${id}/role`, { role });
+  }
+
+  async updateUser(id: string, data: any) {
+    return this.client.patch(`/admin/users/${id}`, data);
+  }
+
+  async deleteUser(id: string) {
+    return this.client.delete(`/admin/users/${id}`);
+  }
+
+  async getAuditLogs(limit = 100, offset = 0) {
+    return this.client.get('/admin/users/audit-logs/all', {
+      params: { limit, offset },
+    });
+  }
+
+  async getUserAuditLogs(userId: string, limit = 50) {
+    return this.client.get(`/admin/users/audit-logs/user/${userId}`, {
+      params: { limit },
+    });
+  }
 }
 
 export const api = new APIClient();
